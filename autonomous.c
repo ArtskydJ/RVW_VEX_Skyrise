@@ -30,10 +30,8 @@ void autoReset(int INcurrentStep)
 	}
 
 
-void auto(int INdrvType, long INdrvLft, long INdrvRht, int INlift, int INendType, int INdelayPID)
+void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 	{
-
-	//Next Step...
 	string msg1;
 	if (autoStep < NO_TIME_RECORDS)
 		autoTimeRecord[autoStep] = time1(T1);
