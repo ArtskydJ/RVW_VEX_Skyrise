@@ -42,10 +42,10 @@ void initialize(int INinitPoint)
 	slewConstants[AUTONOMOUS][TREAD]	= AUTO_TRED_SLEW;
 
 	//--RESET TIMERS--//
-	ClearTimer(T1); //Current Autonomous Step
-	ClearTimer(T2); //PID wait
-	ClearTimer(T3); //Entire Autonomous Time
-	ClearTimer(T4); //unassigned
+	clearTimer(T1); //Current Autonomous Step
+	clearTimer(T2); //PID wait
+	clearTimer(T3); //Entire Autonomous Time
+	clearTimer(T4); //unassigned
 
 	//--MISCELLANEOUS--//
 	writeDebugStreamLine("================");

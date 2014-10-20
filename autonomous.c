@@ -3,8 +3,8 @@ void autoReset(int INcurrentStep)
 	zeroMotors();
 	if (INcurrentStep == 0) //Runs at start of Autonomous
 		{
-		ClearTimer(T1);
-		ClearTimer(T3);
+		clearTimer(T1);
+		clearTimer(T3);
 		autoTimer=0;
 		autoClockRunning = true;
 		autoStep = 0;
@@ -57,7 +57,7 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 	setStep(senUS);
 	setLast(senSlide);
 	setLast(senAngle);
-	ClearTimer(T1);
+	clearTimer(T1);
 	/*while(time1(T1)<2000){}
 	ClearTimer(T1);*/
 
@@ -152,7 +152,7 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 				if (INdelayPID<NEXT) INdelayPID=NEXT;
 				if (INdelayPID>PID)  INdelayPID=PID;
 				}
-			ClearTimer(T2); //Timer for PID wait
+			clearTimer(T2); //Timer for PID wait
 			switch(INendType) // This code asks what type of target condition are we looking for? Have we met it?
 				{
 				case TIME_LIMIT: if (time1(T1)>=INdelayPID)				autoHitTarget=NEXT;		  break;
@@ -182,6 +182,6 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 
 		sysLooptime=time1(T4);
 		while (time1(T4) < MIN_LOOP_MS) {}
-		ClearTimer(T4);
+		clearTimer(T4);
 		}
 	}

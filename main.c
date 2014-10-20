@@ -37,6 +37,5 @@ task main()
 	for (int j=0; j<10; j++)
 		motor[j]=0;
 
-	while(1==1) {}
+	while(true) {}
 	}
-

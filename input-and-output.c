@@ -66,8 +66,8 @@ void output()
 #endif
 		}
 	string temp1,temp2;
-	StringFormat(temp1,"Time:%.1f",((float)autoTimer/1000));
-	StringFormat(temp2, "Step: %d", autoStep);	//Show step
+	stringFormat(temp1,"Time:%.1f",((float)autoTimer/1000));
+	stringFormat(temp2, "Step: %d", autoStep);	//Show step
 	displayLCDCenteredString(0,temp1);
 	displayLCDCenteredString(1,temp2);
 	}
