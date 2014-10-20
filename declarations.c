@@ -13,8 +13,8 @@ T_LC_INT senAbsGyro;
 T_LC_INT senUS;
 T_LC_INT senQSEL;
 T_LC_INT senQSER;
-T_LC_INT senSlide;
-T_LC_INT senAngle;
+T_LC_INT senWrist;
+T_LC_INT senLift;
 
 /* OUTPUT VARIABLES
  These variables are written-to, processed and
@@ -22,10 +22,9 @@ read-from, to help assign motor values.
 */
 int outDrvL;
 int outDrvR;
-int outIntk;
 int outLift;
-int outAngl;
-int outDump;
+int outWrst;
+int outClaw;
 
 //Autonomous
 int autoHitTarget;
@@ -45,8 +44,8 @@ T_LC_INT sysState;
 int sysLooptime;
 
 //PID
-T_PID PIDAngle;
-T_PID PIDSlide;
+T_PID PIDWrist;
+T_PID PIDLift;
 T_PID PIDLineFollow;
 T_PID PIDDriveL;
 T_PID PIDDriveR;
@@ -56,7 +55,6 @@ T_PID PIDGyro2;
 //--Arrays--//
 short mtrTarget[10]={0,0,0,0,0,0,0,0,0,0};
 short mtrSlewed[10]={0,0,0,0,0,0,0,0,0,0};
-char slewConstants[2][10];//Intake,	Drive,	Reach 1,	2,	Goal,	Goal2,	Whackback,Catapult1,2,3
-const int presetSlide[] = {-1115,	-1115,	-240,	-240,	-260,	-240,	-1115,	-240,	-240,	-240};
-const int presetAngle[] = {325,		500,	500,	200,	1720,	1935,	2200,	320,	780,	2400};
+char slewConstants[2][10]; //Intake, Drive, Reach 1,	2,	Goal,	Goal2,	Whackback,Catapult1,2,3
+const int presetLift[] = {-1115,	-1115,	-240,	-240,	-260,	-240,	-1115,	-240,	-240,	-240};
 unsigned int autoTimeRecord[NO_TIME_RECORDS];

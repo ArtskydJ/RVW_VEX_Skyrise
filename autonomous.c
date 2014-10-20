@@ -8,9 +8,6 @@ void autoReset(int INcurrentStep)
 		autoTimer=0;
 		autoClockRunning = true;
 		autoStep = 0;
-		setToZero(senQSEL);
-		setToZero(senQSER);
-		setToZero(senSlide);
 		}
 	else //Runs at end of Autonomous
 		{
@@ -18,14 +15,14 @@ void autoReset(int INcurrentStep)
 		writeDebugStreamLine("Time: %.1f",((float)autoTimer/1000));
 		writeDebugStreamLine("----------------");
 		autoClockRunning = false;
-		setToZero(senQSEL);
-		setToZero(senQSER);
-		setToZero(senSlide);
 		}
+	setToZero(senQSEL);
+	setToZero(senQSER);
+	setToZero(senLift);
 	}
 
 
-void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int INintake, int INendType, int INdelayPID)
+void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INwrst, int INclaw, int INendType, int INdelayPID)
 	{
 
 	//Next Step...
@@ -55,8 +52,8 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 	setStep(senQSEL);
 	setStep(senQSER);
 	setStep(senUS);
-	setLast(senSlide);
-	setLast(senAngle);
+	setLast(senLift);
+	setLast(senWrist);
 	clearTimer(T1);
 	/*while(time1(T1)<2000){}
 	ClearTimer(T1);*/
@@ -67,19 +64,18 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 		input();
 
 		//--Set Outputs--//
-		outIntk = INintake;
-		outDump = INdump;
+		outClaw = INclaw;
+		outWrst = INwrst == 0 ? 0 : updatePIDController(PIDWrist, INwrst - senWrist.curr);
+
 		if (INlift==0)
 			{
-			outAngl = 0;
 			outLift = 0;
 			autoLiftReady = true;
 			}
 		else
 			{
-			outAngl = updatePIDController(PIDAngle, presetAngle[INlift-1] - senAngle.curr);
-			outLift = updatePIDController(PIDSlide, presetSlide[INlift-1] - senSlide.curr);
-			if (abs(PIDAngle.error) < PID_ZONE)	autoLiftReady = true;
+			outLift = updatePIDController(PIDLift, presetLift[INlift-1] - senLift.curr);
+			if (abs(PIDLift.error) < PID_ZONE)	autoLiftReady = true;
 			}
 
 
@@ -104,12 +100,12 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 				updatePIDController(PIDGyro2, INdrvLft-senAbsGyro.curr);
 				//updatePIDController(PIDDriveL,INdrvRht - (diffStep(senQSEL) + diffStep(senQSER))/2 );
 				updatePIDController(PIDDriveL,INdrvRht - diffStep(senQSEL));
-				outDrvL = PIDDriveL.output;		//Left
-				capValue(-TURN,outDrvL,TURN);
-				outDrvL+=PIDGyro2.output;
-				outDrvR = PIDDriveL.output;		//Right
-				capValue(-TURN,outDrvR,TURN);
-				outDrvR-=PIDGyro2.output;
+				outDrvL = PIDDriveL.output;   //L
+				outDrvR =  PIDDriveL.output;  //R
+				capValue(-TURN,outDrvL,TURN); //L
+				capValue(-TURN,outDrvR,TURN); //R
+				outDrvL+=PIDGyro2.output;     //L
+				outDrvR-=PIDGyro2.output;     //R
 				if (abs(PIDDriveL.error) < PID_ZONE && abs(PIDDriveR.error) < PID_ZONE) autoDriveReady = true;
 				break;
 			case LINEC:											//Follow Line
@@ -175,8 +171,8 @@ void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int
 		setLast(senQSEL);
 		setLast(senQSER);
 		setLast(senUS);
-		setLast(senSlide);
-		setLast(senAngle);
+		setLast(senLift);
+		setLast(senWrist);
 		//--System--//
 		setLast(sysState);
 

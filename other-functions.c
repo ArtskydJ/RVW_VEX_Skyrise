@@ -30,11 +30,10 @@ int updatePIDController(T_PID &INPID, int INerror)
 void zeroMotors()
 	{
 	outLift = 0;
-	outIntk = 0;
 	outDrvL = 0;
 	outDrvR = 0;
-	outAngl = 0;
-	outDump = 0;
+	outWrst = 0;
+	outClaw = 0;
 	for (int j=0; j<10; j++)
 		mtrTarget[j] = 0;
 	}

@@ -3,13 +3,13 @@ void initialize(int INinitPoint)
 	zeroMotors();
 	//--SET VALUES--//
 	//PID Controllers
-	PIDAngle.kp = 0.8;
-	PIDAngle.ki = 0.00;
-	PIDAngle.kd = 0.00;
+	PIDLift.kp = 0.8;
+	PIDLift.ki = 0.00;
+	PIDLift.kd = 0.00;
 
-	PIDSlide.kp = 0.8;
-	PIDSlide.ki = 0.00;
-	PIDSlide.kd = 0.00;
+	PIDWrist.kp = 0.8;
+	PIDWrist.ki = 0.00;
+	PIDWrist.kd = 0.00;
 
 	PIDLineFollow.kp = 0.2;
 	PIDLineFollow.ki = 0.00;
@@ -33,13 +33,14 @@ void initialize(int INinitPoint)
 	//Motor Slew Constants
 	for (int j=0; j<10; j++)
 		slewConstants[DISABLED][j]		= FULL;				//DISABLED
-	slewConstants[AUTONOMOUS][DRIVE_L]	= AUTO_DRV_SLEW;	//AUTONOMOUS
-	slewConstants[AUTONOMOUS][DRIVE_R]	= AUTO_DRV_SLEW;
-	slewConstants[AUTONOMOUS][INTAKE]	= AUTO_INTK_SLEW;
-	slewConstants[AUTONOMOUS][ANGLE]	= AUTO_ANGL_SLEW;
-	slewConstants[AUTONOMOUS][SLIDE_L]	= AUTO_SLID_SLEW;
-	slewConstants[AUTONOMOUS][SLIDE_R]	= AUTO_SLID_SLEW;
-	slewConstants[AUTONOMOUS][TREAD]	= AUTO_TRED_SLEW;
+	slewConstants[AUTONOMOUS][DRIVE_FL]	= AUTO_DRIV_SLEW;	//AUTONOMOUS
+	slewConstants[AUTONOMOUS][DRIVE_BL]	= AUTO_DRIV_SLEW;
+	slewConstants[AUTONOMOUS][DRIVE_FR]	= AUTO_DRIV_SLEW;
+	slewConstants[AUTONOMOUS][DRIVE_BR]	= AUTO_DRIV_SLEW;
+	slewConstants[AUTONOMOUS][WRIST]	= AUTO_WRST_SLEW;
+	slewConstants[AUTONOMOUS][CLAW] 	= AUTO_CLAW_SLEW;
+	slewConstants[AUTONOMOUS][LIFT_L]	= AUTO_LIFT_SLEW;
+	slewConstants[AUTONOMOUS][LIFT_R]	= AUTO_LIFT_SLEW;
 
 	//--RESET TIMERS--//
 	clearTimer(T1); //Current Autonomous Step
@@ -50,7 +51,8 @@ void initialize(int INinitPoint)
 	//--MISCELLANEOUS--//
 	writeDebugStreamLine("================");
 	sysState.curr=AUTONOMOUS;
-	setToZero(senSlide);
+	setToZero(senWrist);
+	setToZero(senLift);
 	setToZero(senQSEL);
 	setToZero(senQSER);
 	senAddToAbsGyro=INinitPoint;

@@ -59,25 +59,31 @@ time, slow and fast; LCD timeout (untouched).
 #define PID_WAIT_MS			0 //350
 
 /*Preset Values
- Heights for lift, gyro, etc.
+Heights for lift, degrees for gyro
 */
-#define L_INTK	1
-#define L_DRIV	2
-#define L_RCH1	3
-#define L_RCH2	4
-#define L_GOAL	5
-#define L_GOA2	6
-#define L_WHBK	7
-#define L_CAT1	8
-#define L_CAT2	9
-#define L_CAT3	10
+#define L_CUBE      1
+#define L_SECT      2
+#define L_GOAL_LO   3
+#define L_GOAL_ME   4
+#define L_GOAL_HI   5
+#define L_SKY(n) (n+6)
 
-#define TURN_L	-900 //Relative-v-
-#define TURN_R	900  //Relative-^-
-#define BLUE_S	900  //Absolute-v-
-#define RED_S	2700 //Absolute |
-#define GOAL_Z	0    //Absolute |
-#define HANG_Z	1800 //Absolute-^-
+#define C_SHUT -127
+#define C_STOP 0
+#define C_OPEN 127
+
+#define W_FWD  2200
+#define W_HIGH 3450
+#define W_DOWN 200 //?
+
+
+#define TURN_L	-900 //Relative
+#define TURN_R	900  //Relative
+
+#define BLUE_S	900  //Absolute
+#define RED_S	2700 //Absolute
+#define GOAL_Z	0    //Absolute
+#define HANG_Z	1800 //Absolute
 
 /*Drive Direction
  This is for which direction the robot is pointed
@@ -110,11 +116,10 @@ so that the drive can be translated correctly.
  Values for how much to add to each motor value
 each loop iteration.
 */
-#define AUTO_DRV_SLEW	3
-#define AUTO_ANGL_SLEW	8
-#define AUTO_INTK_SLEW	64
-#define AUTO_SLID_SLEW	12
-#define AUTO_TRED_SLEW	12
+#define AUTO_DRIV_SLEW	3
+#define AUTO_LIFT_SLEW	8
+#define AUTO_WRST_SLEW	8
+#define AUTO_CLAW_SLEW  64
 
 /*Robot States
  What state the robot is currently in...
