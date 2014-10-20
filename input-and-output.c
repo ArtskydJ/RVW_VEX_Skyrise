@@ -17,14 +17,15 @@ void input()
 		}
 
 	//--Robot Sensors--//
-	senGyro.curr =		SensorValue[COMPASS]%3600;
-	senLight.curr =		SensorValue[LIGHT];
+	senGyro.curr =		SensorValue[GYRO]%3600;
+	senQSEL.curr =		SensorValue[QUAD_L];
+	senQSER.curr =		SensorValue[QUAD_R];
 	senUS.curr =		SensorValue[ULTRA];
-	senQSEL.curr =		-nMotorEncoder[DRIVE_BL];
-	senQSER.curr =		nMotorEncoder[DRIVE_BR];
-	senClaw.curr =		nMotorEncoder[CLAW];
-	senLift.curr =		nMotorEncoder[LIFT_L];
-	senWrist.curr =		nMotorEncoder[WRIST];
+	senSlide.curr =		-SensorValue[QUAD_SLIDE];
+	senAngle.curr =		SensorValue[ANGLE_POT];
+	senLineL =			SensorValue[LINE_L];
+	senLineC =			SensorValue[LINE_C];
+	senLineR =			SensorValue[LINE_R];
 
 	if (autoClockRunning)
 		autoTimer = time1(T3);
@@ -44,32 +45,29 @@ void output()
 		}
 	else
 		{
-		mtrTarget[DRIVE_FL] = outDrvL;
-		mtrTarget[DRIVE_FR] = outDrvR;
-		mtrTarget[DRIVE_BL] = outDrvL;
-		mtrTarget[DRIVE_BR] = outDrvR;
-		mtrTarget[CLAW]		= outClaw;
-		mtrTarget[LIFT_L]	= outLift;
-		mtrTarget[LIFT_R]	= outLift;
-		mtrTarget[WRIST]	= outWrst;
+		mtrTarget[DRIVE_L] = outDrvL;
+		mtrTarget[DRIVE_R] = outDrvR;
+		mtrTarget[SLIDE_L] = outLift;
+		mtrTarget[SLIDE_R] = outLift;
+		mtrTarget[ANGLE]  = outAngl;
+		mtrTarget[INTAKE] = outIntk;
+		mtrTarget[TREAD] = outDump;
 		}
 
-	capValue(-40, mtrTarget[LIFT_L], 60); //CAP LIFT SLOWER
-	capValue(-40, mtrTarget[LIFT_R], 60); //CAP LIFT SLOWER
 	for (int j=0; j<10; j++)
 		{
 #ifdef SLEW
 		mtrSlewed[j] += slew(mtrTarget[j], mtrSlewed[j], slewConstants[sysState.curr][j]); //SLEW CONTROLLERS
-		capValue(-100, mtrSlewed[j], 100); //CAP ALL MOTORS
+		capValue(-127, mtrSlewed[j], 127); //CAP ALL MOTORS
 		motor[j] = mtrSlewed[j]; //ASSIGN MOTORS
 #else
-		capValue(-100, mtrTarget[j], 100); //CAP ALL MOTORS
+		capValue(-127, mtrTarget[j], 127); //CAP ALL MOTORS
 		motor[j] = mtrTarget[j]; //ASSIGN MOTORS
 #endif
 		}
 	string temp1,temp2;
 	StringFormat(temp1,"Time:%.1f",((float)autoTimer/1000));
 	StringFormat(temp2, "Step: %d", autoStep);	//Show step
-	nxtDisplayCenteredTextLine(0,temp1);
-	nxtDisplayCenteredTextLine(1,temp2);
+	displayLCDCenteredString(0,temp1);
+	displayLCDCenteredString(1,temp2);
 	}

@@ -1,16 +1,12 @@
 //Definitions.c
 //2013-05-06
 
-/*MOTORS
- Change motor names to memorable names.
-*/
-#define CLAW	motorA
-#define WRIST	motorB
-
 /*FLAGS
  These flags are meant to be overall system
 toggles that are easily turned off and on.
 */
+#define AUTON_BEEP
+#define SOUND_EFFECTS
 //#define SLEW
 //#undef _TARGET				//This statement and the next go together. Uncomment both
 //#define _TARGET "VirtWorld"	//If you want the emulator to act like a virtual worlds robot.
@@ -39,12 +35,19 @@ different sensors can be used.
 #define L_US(n)						((K_STRAFE*1)+n)
 #define R_US(n)						((K_STRAFE*2)+n)
 
+/*Auton Routine Portions
+ Portions of the auto routine.
+*/
+#define RUN_ALL		0
+#define RUN_HALF	1
+#define RUN_END		2
+
 /*VALUES
  These values are stored here for easy modifica-
 tion of system constants.
  NO means Number-Of.
 */
-#define NO_AUTO_COLUMNS		6
+#define NO_AUTO_COLUMNS		7
 #define NO_TIME_RECORDS		100
 
 /*Time
@@ -54,86 +57,64 @@ time, slow and fast; LCD timeout (untouched).
 */
 #define MIN_LOOP_MS			4
 #define PID_WAIT_MS			0 //350
-#define SHUT_CLAW_MS		1000
 
 /*Preset Values
  Heights for lift, gyro, etc.
 */
-#define START	0
-#define FINISH	1
+#define L_INTK	1
+#define L_DRIV	2
+#define L_RCH1	3
+#define L_RCH2	4
+#define L_GOAL	5
+#define L_GOA2	6
+#define L_WHBK	7
+#define L_CAT1	8
+#define L_CAT2	9
+#define L_CAT3	10
 
-#define LOW_LV	1
-#define LOW_OP	2
-#define LOW_SH	3
-#define MED_OP	4
-#define MED_SH	5
-#define HIG_OP	6
-#define HIG_SH	7
-#define CRN_OP	8
-#define CRN_SH	9
-#define DRP_OP	10
-#define DRP_SH	11
-#define NEW_OP	12
-#define NEW_SH	13
+#define TURN_L	-900 //Relative-v-
+#define TURN_R	900  //Relative-^-
+#define BLUE_S	900  //Absolute-v-
+#define RED_S	2700 //Absolute |
+#define GOAL_Z	0    //Absolute |
+#define HANG_Z	1800 //Absolute-^-
 
-#define L_HIGH	3000 //2940	100	3040
-#define L_MED	2150 //2086	314	2400
-#define L_LOW	1000 //867	493	1360
-#define L_CRNR	1100 //1055	330	1485
-
-
-#define C_SH	10
-#define C_OP	-70
-
-#define W_NEW	200
-#define W_HI	150 //180
-#define W_HI2	160
-#define W_MED	130
-#define W_LEV	90
-#define W_DRP	55
-#define W_LOW	0
-
-
-#define LFT_90	-900	//Relative-v-
-#define LFT_45	-450	//Relative |
-#define RHT_45	450		//Relative |
-#define RHT_90	900		//Relative-^-
-#define WEST	0		//Absolute-v-
-#define N_WEST	450		//Absolute |
-#define NORTH	900		//Absolute |
-#define N_EAST	1350	//Absolute |
-#define EAST	1800	//Absolute |
-#define S_EAST	2250	//Absolute |
-#define SOUTH	2700	//Absolute |
-#define S_WEST	3150	//Absolute-^-
-
+/*Drive Direction
+ This is for which direction the robot is pointed
+so that the drive can be translated correctly.
+*/
+#define DRV_FWD 0
+#define DRV_LFT 1
+#define DRV_REV 2
+#define DRV_RHT 3
 
 /*Motor Speed Constants
  Shortcuts for autonomous writing.
 */
-#define UP		 100
-#define DOWN	-100
-#define FWD		 100
-#define REV		-100
-#define LEFT	-100
-#define RIGHT	 100
+#define UP		 127
+#define DOWN	-127
+#define FWD		 127
+#define REV		-127
+#define LEFT	-127
+#define RIGHT	 127
 #define BOTH	 0
-#define IN		 100
-#define OUT		-100
-#define FULL	 100
-#define HALF	 50
+#define IN		 127
+#define OUT		-127
+#define FULL	 127
+#define HALF	 64
 #define FOLLOW	 100
-#define TURN	 100
-#define BRAKE	 5	//can also be used in -Action- column
+#define TURN	 127
+#define BRAKE	 5 //can also be used in -Action- column
 
 /*Motor Slew Constants
  Values for how much to add to each motor value
 each loop iteration.
 */
 #define AUTO_DRV_SLEW	3
-#define AUTO_LIFT_SLEW	8
-#define AUTO_WRST_SLEW	12
-#define AUTO_CLAW_SLEW	12
+#define AUTO_ANGL_SLEW	8
+#define AUTO_INTK_SLEW	64
+#define AUTO_SLID_SLEW	12
+#define AUTO_TRED_SLEW	12
 
 /*Robot States
  What state the robot is currently in...
@@ -157,11 +138,6 @@ the next step is executed.
 #define NEXT	1
 #define PID		2
 
-/*Line Following
- Edge, and line definitions
-*/
-#define LINE	50
-
 /*Next Condition
  These are for if the minimum or maximum time are
 used in autonomous. If one is used, then a debug
@@ -172,6 +148,11 @@ out.
 #define SENSOR_HIT	0
 #define MIN_TIMEOUT	1
 #define MAX_TIMEOUT	2
+
+/*Line Following
+ Edge, and line definitions
+*/
+#define LINE	1300
 
 /*Autonomous End and Drive types
  The Drive types are for how the robot drives.
@@ -192,15 +173,17 @@ For example:
 #define DRIV_READY	2	// Finished using Drive
 #define LIFT_READY	3	// Finished using Lift
 #define FULL_READY	4	// Finished using Drive and Lift
-#define FRONT_LINE	5	// Center Line sensor hits
+#define ONE_EDG_LN	5	// Cross Line
+#define	TWO_EDG_LN	6	// Line up on white line
+#define FRONT_LINE	7	// Center Line sensor hits
 // Drive Types
-#define SPD		0	//Speed
-#define ENC		1	//Encoder
-#define STR		2	//Straight
-#define CMP_2	3	//Compass turn - 2 Sides
-#define CMP_L	4	//Compass turn - Left Side
-#define CMP_R	5	//Compass turn - Right Side
-#define FLINE	6	//Follow Line
+#define SPD		0
+#define ENC		1
+#define STR		2
+#define GYRO2	3
+#define GYROL	4
+#define GYROR	5
+#define LINEC	6
 
 /*Miscellaneous defined values
  The PID zone is so that small error values

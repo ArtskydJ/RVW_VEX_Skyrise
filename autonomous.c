@@ -10,29 +10,26 @@ void autoReset(int INcurrentStep)
 		autoStep = 0;
 		setToZero(senQSEL);
 		setToZero(senQSER);
-		setToZero(senClaw);
-		setToZero(senLift);
-		setToZero(senWrist);
+		setToZero(senSlide);
 		}
 	else //Runs at end of Autonomous
 		{
-		instantZeroMotors();
 		writeDebugStreamLine("----------------");
 		writeDebugStreamLine("Time: %.1f",((float)autoTimer/1000));
 		writeDebugStreamLine("----------------");
 		autoClockRunning = false;
 		setToZero(senQSEL);
 		setToZero(senQSER);
-		setToZero(senClaw);
-		setToZero(senLift);
-		setToZero(senWrist);
+		setToZero(senSlide);
 		}
 	}
 
 
-void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
+void auto(int INdrvType, int INdrvLft, int INdrvRht, int INlift, int INdump, int INintake, int INendType, int INdelayPID)
 	{
-	string msg1;
+
+	//Next Step...
+	string msg1,msg2="";
 	if (autoStep < NO_TIME_RECORDS)
 		autoTimeRecord[autoStep] = time1(T1);
 	if (time1(T1)<1000)
@@ -40,13 +37,15 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 	else
 		writeDebugStreamLine("%d\t|%d",time1(T1),autoStep);
 	autoClockRunning=true;
+	autoFoundLeft = false;
+	autoFoundRight = false;
 	autoDriveReady = false;
 	autoLiftReady = false;
 	autoHitTarget = NOT_HIT;
 	autoStepStatus = SENSOR_HIT;
 	autoStep++;
-	nMotorEncoder[DRIVE_BL]=0;
-	nMotorEncoder[DRIVE_BR]=0;
+	SensorValue[QUAD_L]=0;
+	SensorValue[QUAD_R]=0;
 	setToZero(senQSEL);
 	setToZero(senQSER);
 
@@ -55,11 +54,11 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 	setStep(senAbsGyro);
 	setStep(senQSEL);
 	setStep(senQSER);
-	setStep(senClaw);
-	setLast(senLift);
-	setLast(senWrist);
+	setStep(senUS);
+	setLast(senSlide);
+	setLast(senAngle);
 	ClearTimer(T1);
-	/*while(time1(T1)<2000){} //DELAY BETWEEN STEPS
+	/*while(time1(T1)<2000){}
 	ClearTimer(T1);*/
 
 
@@ -68,24 +67,19 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 		input();
 
 		//--Set Outputs--//
+		outIntk = INintake;
+		outDump = INdump;
 		if (INlift==0)
 			{
-			outClaw = 0;
+			outAngl = 0;
 			outLift = 0;
-			outWrst = 0;
 			autoLiftReady = true;
 			}
 		else
 			{
-			if (time1(T1)<SHUT_CLAW_MS)
-				outClaw = updatePIDController(PIDClaw,	presetClaw[INlift-1] - senClaw.curr);
-			else
-				outClaw = updatePIDController(PIDWrist,	C_SH - senClaw.curr); //Shut claw after SHUT_CLAW_MS
-			outLift =	updatePIDController(PIDLift,	presetLift[INlift-1] - senLift.curr);
-			outWrst =	updatePIDController(PIDWrist,	presetWrist[INlift-1]- senWrist.curr); //Shut claw after 1.5 sec
-			if (abs(PIDClaw.error) < PID_ZONE &&
-				abs(PIDLift.error) < PID_ZONE &&
-				abs(PIDWrist.error) < PID_ZONE)	autoLiftReady = true;
+			outAngl = updatePIDController(PIDAngle, presetAngle[INlift-1] - senAngle.curr);
+			outLift = updatePIDController(PIDSlide, presetSlide[INlift-1] - senSlide.curr);
+			if (abs(PIDAngle.error) < PID_ZONE)	autoLiftReady = true;
 			}
 
 
@@ -108,7 +102,8 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 				break;
 			case STR:											//Gyro keep straight
 				updatePIDController(PIDGyro2, INdrvLft-senAbsGyro.curr);
-				updatePIDController(PIDDriveL,INdrvRht - (diffStep(senQSEL) + diffStep(senQSER))/2 );
+				//updatePIDController(PIDDriveL,INdrvRht - (diffStep(senQSEL) + diffStep(senQSER))/2 );
+				updatePIDController(PIDDriveL,INdrvRht - diffStep(senQSEL));
 				outDrvL = PIDDriveL.output;		//Left
 				capValue(-TURN,outDrvL,TURN);
 				outDrvL+=PIDGyro2.output;
@@ -117,29 +112,37 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 				outDrvR-=PIDGyro2.output;
 				if (abs(PIDDriveL.error) < PID_ZONE && abs(PIDDriveR.error) < PID_ZONE) autoDriveReady = true;
 				break;
-			case FLINE:											//Follow Line
-				updatePIDController(PIDLineFollow,senLight.curr-LINE);
+			case LINEC:											//Follow Line
+				updatePIDController(PIDLineFollow,senLineC-LINE);
 				outDrvL = INdrvLft - PIDLineFollow.output;
 				outDrvR = INdrvLft + PIDLineFollow.output;
 				break;
-			case CMP_2:											//Gyro turn both
+			case GYRO2:											//Gyro turn both
 				updatePIDController(PIDGyro2, INdrvLft-diffStep(senGyro));
 				outDrvL =  PIDGyro2.output; capValue(-abs(INdrvRht),outDrvL,abs(INdrvRht));
 				outDrvR = -PIDGyro2.output; capValue(-abs(INdrvRht),outDrvL,abs(INdrvRht));
 				if (abs(PIDGyro2.error) < PID_ZONE) autoDriveReady = true;
 				break;
-			case CMP_L:											//Gyro turn left - GOOD
+			case GYROL:											//Gyro turn left - GOOD
 				updatePIDController(PIDGyro1, INdrvLft-diffStep(senAbsGyro));
 				outDrvL = PIDGyro1.output; capValue(-abs(INdrvRht),outDrvR,abs(INdrvRht));
 				outDrvR = 0;
 				if (abs(PIDGyro1.error) < PID_ZONE) autoDriveReady = true;
 				break;
-			case CMP_R:											//Gyro turn right - GOOD
+			case GYROR:											//Gyro turn right - GOOD
 				updatePIDController(PIDGyro1, -INdrvLft+diffStep(senAbsGyro));
 				outDrvL = 0;
 				outDrvR = PIDGyro1.output; capValue(-abs(INdrvRht),outDrvR,abs(INdrvRht));
 				if (abs(PIDGyro1.error) < PID_ZONE) autoDriveReady = true;
 				break;
+			}
+
+		if (senLineL < LINE)	autoFoundLeft = true;	//Found Left Edge
+		if (senLineR < LINE)	autoFoundRight = true;	//Found Right Edge
+		if (INendType==TWO_EDG_LN)
+			{
+			if (autoFoundLeft)	outDrvL = BRAKE;
+			if (autoFoundRight)	outDrvR = BRAKE;
 			}
 
 		if (autoHitTarget==NOT_HIT)
@@ -156,6 +159,9 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 				case DRIV_READY: if (autoDriveReady)					autoHitTarget=INdelayPID; break;
 				case LIFT_READY: if (autoLiftReady)						autoHitTarget=INdelayPID; break;
 				case FULL_READY: if (autoDriveReady && autoLiftReady)	autoHitTarget=INdelayPID; break;
+				case ONE_EDG_LN: if (autoFoundLeft || autoFoundRight)	autoHitTarget=INdelayPID; break;
+				case TWO_EDG_LN: if (autoFoundLeft && autoFoundRight)	autoHitTarget=INdelayPID; break;
+				case FRONT_LINE: if (senLineC<LINE)						autoHitTarget=INdelayPID; break;
 				default: break; //nothing
 				}
 			}
@@ -168,9 +174,9 @@ void auto(unsigned long INdrive, int INlift, int INendType, int INdelayPID)
 		setLast(senAbsGyro);
 		setLast(senQSEL);
 		setLast(senQSER);
-		setLast(senClaw);
-		setLast(senLift);
-		setLast(senWrist);
+		setLast(senUS);
+		setLast(senSlide);
+		setLast(senAngle);
 		//--System--//
 		setLast(sysState);
 
